@@ -7,7 +7,7 @@ import (
 "encoding/hex"
 "log"
 "fmt"
-"github.com/tidwall/buntdb"
+//"github.com/tidwall/buntdb"
 "time"
 "github.com/jacobsa/go-serial/serial"
 "bufio"
@@ -73,6 +73,7 @@ func UTside() {
 			}
 			switch hex.EncodeToString(buf) {
 				case "32": // ping
+					start := time.Now()
 					buf, err := ReadOneByte()
 					if err != nil {
 						log.Fatal(err)
@@ -85,8 +86,14 @@ func UTside() {
 						fmt.Println("connected")
 						goto loop
 					}
+
+					if time.Since(start) >= time.Second {
+							fmt.Println("Time out")
+							goto loop
+						}
 				case "aa": //read package
 					data = append(data[:],buf[:]...)
+					start := time.Now()
 					for{
 						buf, err := ReadOneByte()
 						if err != nil {
@@ -97,6 +104,11 @@ func UTside() {
 							break
 						} else {
 							data = append(data[:],buf[:]...)
+						}
+
+						if time.Since(start) >= time.Second {
+							fmt.Println("Time out")
+							goto loop
 						}
 					}
 			}
@@ -192,12 +204,14 @@ func main() {
 	fmt.Println("Hello, 世界")
 
 	// Open the data.db file. It will be created if it doesn't exist.
+	/*
 	db, err := buntdb.Open("data.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer db.Close()
-	
+	*/
+
 	go UTside()
 	//go PCside()
 
